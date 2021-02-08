@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/linuxing3/vpsman/util"
 	"github.com/spf13/cobra"
 )
 
@@ -25,16 +25,37 @@ import (
 var caddyCmd = &cobra.Command{
 	Use:   "caddy",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: `About usage of using caddy. For example: 
+	Caddy is a CLI Command for Go that empowers web.
+	server with https support.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("caddy called")
+		caddyMenu()
 	},
 }
+
+func caddyMenu() {
+	exit:
+		 for {
+			fmt.Println()
+			fmt.Print(util.Cyan("Please select command"))
+			fmt.Println()
+			loopMenu := []string{"Start", "Status", "Stop"}
+			choice := util.LoopInput("Enter to Exit", loopMenu, false)
+			switch choice {
+					case 1:
+							fmt.Println("caddy start")
+							util.ExecCommand("systemctl start caddy")
+					case 2:
+							fmt.Println("caddy status")
+							util.ExecCommand("systemctl status caddy")
+					case 3:
+							fmt.Println("caddy stop")
+							util.ExecCommand("systemctl stop caddy")
+					default:
+							break exit
+					}
+		 }
+	}
 
 func init() {
 	rootCmd.AddCommand(caddyCmd)

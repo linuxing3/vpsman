@@ -26,7 +26,7 @@ import (
 var xrayCmd = &cobra.Command{
 	Use:   "xray",
 	Short: "Manage xray service on your vps",
-	Long: ` About usage of using xay. For example: 
+	Long: ` About usage of using xray. For example: 
 Xray is a CLI Command for Go that empowers proxy.
 to quickly create a web tunnel.`,
 	Run: func(cmd *cobra.Command, args []string) {

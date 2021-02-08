@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/linuxing3/vpsman/util"
 	"github.com/spf13/cobra"
 )
