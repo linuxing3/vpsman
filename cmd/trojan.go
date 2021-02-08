@@ -34,6 +34,7 @@ to quickly create a web tunnel.`,
 	},
 }
 
+// TrojanMenu 控制TrojanMenu
 func trojanMenu() {
 exit:
    for {

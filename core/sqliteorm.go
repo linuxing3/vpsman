@@ -30,23 +30,21 @@ type User struct {
 	ExpiryDate   string
 }
 
-var defaultPath string = "./vpsman.db"
 
 // NewSqlite constructor
-func (s *Sqlite)NewSqlite (path string) *Sqlite {
-    if path == "" {
-        path = defaultPath
-    }
-    return &Sqlite{
-        Path: path,
-    }
+func NewSqlite (path string) *Sqlite {
+	var defaultPath string = "./vpsman.db"
+	if path == "" {
+			path = defaultPath
+	}
+	return &Sqlite{
+			Path: path,
+	}
 }
 
 // Connect Connect Sqlite for UserModel
 func (s *Sqlite)Connect() *gorm.DB {
-	if s == nil {
-		s = s.NewSqlite("")
-	}
+
 	db, err := gorm.Open(sqlite.Open(s.Path), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
@@ -132,6 +130,23 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 		if err := db.Where("id > ?", 0).Find(&user).Error; err != nil {
 			return nil, err
 		}
+	}
+	// 更改为指针数组
+	for _, e := range user {
+		userList = append(userList, &e)
+	}
+	fmt.Println(user)
+	return userList, nil
+}
+
+// QueryUsersWhereORM 根据指定多个id获取用户记录
+func (s *Sqlite) QueryUsersWhereORM(cond interface{}) ([]*User, error) {
+	var user []User
+	var userList []*User
+	db := s.Connect()
+	fmt.Println("Find all records:")
+	if err := db.Where(cond).Find(&user).Error; err != nil {
+		return nil, err
 	}
 	// 更改为指针数组
 	for _, e := range user {

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/linuxing3/vpsman/web"
 	"github.com/spf13/cobra"
 )
@@ -37,9 +38,16 @@ and usage of using command. For example:
 vpsman web -p 8080 --host 0.0.0.0 --ssl false
 to quickly create a Web Gin application.`, 
 	Run: func(cmd *cobra.Command, args []string) {
-    web.Start(host, port, ssl)
+		fmt.Println("Starting web")
+		webMenu(host, port, ssl)
 	},
 }
+
+// WebMenu get webmenu
+func webMenu(host string, port int, ssl bool) {
+	web.Start(host, port, ssl)
+}
+
 
 func init() {
 

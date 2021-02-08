@@ -17,14 +17,16 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
+	"github.com/linuxing3/vpsman/util"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+var dbPath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,8 +40,33 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		mainMenu(dbPath)
+	},
 }
+
+func mainMenu(dbPath string) {
+exit:
+	for {
+		fmt.Println()
+		fmt.Println(util.Cyan("欢迎使用xray管理程序"))
+		fmt.Println()
+		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理"}
+		switch util.LoopInput("请选择: ", menuList, false) {
+		case 1:
+			userMenu(dbPath)
+		case 2:
+			xrayMenu()
+		case 3:
+			nginxMenu()
+		case 4:
+			trojanMenu()
+		default:
+			break exit
+		}
+	}
+}
+
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -62,6 +89,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringVarP(&dbPath, "db", "", "./vpsman.db", "数据库目录地址")
 }
 
 // initConfig reads in config file and ENV variables if set.

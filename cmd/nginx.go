@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/linuxing3/vpsman/util"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +35,7 @@ to quickly create a web tunnel.`,
 	},
 }
 
+// NginxMenu 控制NginxMenu
 func nginxMenu() {
 exit:
    for {

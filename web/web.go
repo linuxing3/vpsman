@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
 	"github.com/linuxing3/vpsman/util"
 	"github.com/linuxing3/vpsman/web/controller"
 
@@ -83,9 +84,6 @@ func xrayRouter(router *gin.Engine) {
 		// level, _ := strconv.Atoi(slevel)
 		c.JSON(200, controller.SetLogLevel(slevel))
 	})
-	router.POST("/xray/domain", func(c *gin.Context) {
-		c.JSON(200, controller.SetDomain(c.PostForm("domain")))
-	})
 	router.GET("/xray/log", func(c *gin.Context) {
 		controller.Log(c)
 	})
@@ -113,9 +111,6 @@ func Start(host string, port int, isSSL bool) {
 	// 动态路由
 	xrayRouter(router)
 	userRouter(router)
-	// 定时任务
-	controller.SheduleTask()
-	controller.CollectTask()
 	// 打开端口
 	util.OpenPort(port)
 	// 启动服务器

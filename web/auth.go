@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/linuxing3/vpsman/core"
 	"github.com/linuxing3/vpsman/web/controller"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -81,8 +82,10 @@ func init() {
 func updateUser(c *gin.Context) {
 	responseBody := controller.ResponseBody{Msg: "success"}
 	defer controller.TimeCost(time.Now(), &responseBody)
-	// username := c.DefaultPostForm("username", "admin")
-	// pass := c.PostForm("password")
+	username := c.DefaultPostForm("username", "admin")
+	pass := c.PostForm("password")
+	s := core.Sqlite{ Path: "" }
+	s.UpdateUserORM("", username, pass, "")
 	// set value in leveldb for sessions
 	c.JSON(200, responseBody)
 }
