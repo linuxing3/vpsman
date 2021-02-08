@@ -108,7 +108,7 @@ func (s *Sqlite) QueryUserORM(id string) (*User, error) {
 
 // QueryUsersORM 根据指定多个id获取用户记录
 func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
-	var user []User
+	var users []User
 	var userList []*User
 	db := s.Connect()
 
@@ -122,36 +122,35 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 			idInt, _ := strconv.Atoi(e)
 			idsInt[i] = idInt
 		}
-		if err := db.Find(&user, idsInt).Error; err != nil {
+		if err := db.Find(&users, idsInt).Error; err != nil {
 			return nil, err
 		}
 	} else {
 		fmt.Println("Find all records:")
-		if err := db.Where("id > ?", 0).Find(&user).Error; err != nil {
+		if err := db.Where("id > ?", 0).Find(&users).Error; err != nil {
 			return nil, err
 		}
 	}
 	// 更改为指针数组
-	for _, e := range user {
+	for _, e := range users {
 		userList = append(userList, &e)
 	}
-	fmt.Println(user)
 	return userList, nil
 }
 
 // QueryUsersWhereORM 根据指定多个id获取用户记录
 func (s *Sqlite) QueryUsersWhereORM(cond interface{}) ([]*User, error) {
-	var user []User
+	var users []User
 	var userList []*User
 	db := s.Connect()
 	fmt.Println("Find all records:")
-	if err := db.Where(cond).Find(&user).Error; err != nil {
+	if err := db.Where(cond).Find(&users).Error; err != nil {
 		return nil, err
 	}
 	// 更改为指针数组
-	for _, e := range user {
+	for _, e := range users {
 		userList = append(userList, &e)
 	}
-	fmt.Println(user)
+	fmt.Println(users)
 	return userList, nil
 }

@@ -58,6 +58,11 @@ func DelUser(dbPath string) {
 	if err != nil {
 		fmt.Print(err)
 	}
+	for i, k := range userList {
+		fmt.Printf("%d.\n", i+1)
+		fmt.Println("用户id: " + fmt.Sprint(k.ID))
+		fmt.Println("用户名: " + k.Username)
+	}
 	choice := util.LoopInput("请选择要删除的用户序号: ", userList, true)
 	if choice == -1 {
 		return
