@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -47,10 +48,41 @@ func init() {
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var (
+				password string
 				loginVals Login
 			)
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
+			}
+			// logic
+			userID := loginVals.Username
+			pass := loginVals.Password
+			if err != nil {
+				return nil, err
+			}
+			if userID != "admin" {
+				// normal user password stored in sqlite
+				sqlite := core.NewSqlite(controller.DefaultDbPath)
+				cond := struct{
+					UserName string
+				}{
+					UserName: userID,
+				}
+				// query with condition
+				user, _ := sqlite.QueryUsersWhereORM(cond)
+				if len(user) == 0 {
+					return nil, jwt.ErrFailedAuthentication
+				}
+				password = user[0].Password
+			} else {
+				// admin password stored in leveldb
+				if password, err = core.GetValue(userID + "_pass"); err != nil {
+					return nil, err
+				}
+			}
+			// TODO 是否需要解密
+			if base64.StdEncoding.EncodeToString([]byte(pass)) == password {
+				return &loginVals, nil
 			}
 			if err != nil {
 				return nil, err
@@ -84,9 +116,11 @@ func updateUser(c *gin.Context) {
 	defer controller.TimeCost(time.Now(), &responseBody)
 	username := c.DefaultPostForm("username", "admin")
 	pass := c.PostForm("password")
-	s := core.Sqlite{ Path: "" }
-	s.UpdateUserORM("", username, pass, "")
 	// set value in leveldb for sessions
+	err := core.SetValue(fmt.Sprintf("%s_pass", username), pass)
+	if err != nil {
+		responseBody.Msg = err.Error()
+	}
 	c.JSON(200, responseBody)
 }
 

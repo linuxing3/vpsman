@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/linuxing3/vpsman/util"
 	websocket "github.com/linuxing3/vpsman/util"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ import (
 func Start() *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+	util.ExecCommand("systemctl start xray")
 	return &responseBody
 }
 
@@ -20,6 +22,7 @@ func Start() *ResponseBody {
 func Stop() *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+	util.ExecCommand("systemctl stop xray")
 	return &responseBody
 }
 
@@ -27,30 +30,7 @@ func Stop() *ResponseBody {
 func Restart() *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
-	return &responseBody
-}
-
-// Update xray更新
-func Update() *ResponseBody {
-	responseBody := ResponseBody{Msg: "success"}
-	defer TimeCost(time.Now(), &responseBody)
-	return &responseBody
-}
-
-// SetLogLevel 修改xray日志等级
-func SetLogLevel(level string) *ResponseBody {
-	responseBody := ResponseBody{Msg: "success"}
-	defer TimeCost(time.Now(), &responseBody)
-	return &responseBody
-}
-
-// GetLogLevel 获取xray日志等级
-func GetLogLevel() *ResponseBody {
-	responseBody := ResponseBody{Msg: "success"}
-	defer TimeCost(time.Now(), &responseBody)
-	responseBody.Data = map[string]interface{}{
-		"loglevel": "",
-	}
+	util.ExecCommand("systemctl restart xray")
 	return &responseBody
 }
 
