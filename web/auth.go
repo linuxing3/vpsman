@@ -1,7 +1,7 @@
 package web
 
 import (
-	"encoding/base64"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -69,21 +69,24 @@ func init() {
 				// query with condition
 				user, _ := sqlite.QueryUsersWithStructORM(cond)
 				if len(user) == 0 {
+					fmt.Println("No User Found")
 					return nil, jwt.ErrFailedAuthentication
 				}
+				fmt.Println("Found User:")
+				fmt.Println(user)
 				password = user[0].Password
+				encryPass := sha256.Sum224([]byte(pass))
+				if password == fmt.Sprintf("%x", encryPass) {
+					return &loginVals, nil
+				}
 			} else {
 				// admin password stored in leveldb
 				if password, err = core.GetValue(userID + "_pass"); err != nil {
 					return nil, err
 				}
-			}
-			// TODO 是否需要解密
-			if base64.StdEncoding.EncodeToString([]byte(pass)) == password {
-				return &loginVals, nil
-			}
-			if err != nil {
-				return nil, err
+				if password == pass {
+					return &loginVals, nil
+				}
 			}
 			return nil, jwt.ErrFailedAuthentication
 		},
@@ -110,6 +113,7 @@ func init() {
 }
 
 func updateUser(c *gin.Context) {
+	// only for update admin information
 	responseBody := controller.ResponseBody{Msg: "success"}
 	defer controller.TimeCost(time.Now(), &responseBody)
 	username := c.DefaultPostForm("username", "admin")

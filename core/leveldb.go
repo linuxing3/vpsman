@@ -4,7 +4,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-var dbPath = "/var/lib/trojan-manager"
+var dbPath = "/var/lib/vpsman-manager"
 
 // GetValue 获取leveldb值
 func GetValue(key string) (string, error) {
