@@ -73,7 +73,7 @@ func init() {
 				}
 				password = user[0].Password
 			} else {
-				// admin password stored in leveldb
+				// admin password stored in leveldb or jsondb
 				if password, err = core.GetValue(userID + "_pass"); err != nil {
 					return nil, err
 				}
@@ -112,13 +112,16 @@ func init() {
 func updateUser(c *gin.Context) {
 	responseBody := controller.ResponseBody{Msg: "success"}
 	defer controller.TimeCost(time.Now(), &responseBody)
+
 	username := c.DefaultPostForm("username", "admin")
 	pass := c.PostForm("password")
-	// set value in leveldb for sessions
+
+	// TODO set value in leveldb/jsondb for sessions
 	err := core.SetValue(fmt.Sprintf("%s_pass", username), pass)
 	if err != nil {
 		responseBody.Msg = err.Error()
 	}
+
 	c.JSON(200, responseBody)
 }
 
