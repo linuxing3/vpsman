@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/linuxing3/vpsman/core"
@@ -64,22 +66,12 @@ func CreateUser(username string, password string) *ResponseBody {
 	}
 	// 创建普通用户
 	sqlite := core.NewSqlite(DefaultDbPath)
-	// 1.解码密码作为origPass
-	pass, err := base64.StdEncoding.DecodeString(password)
-	if err != nil {
-		responseBody.Msg = "Base64解码失败: " + err.Error()
+	if sqlite.HasDuplicateUserORM(username, password) {
+		responseBody.Msg = "已存在这个用户名或密码的用户!"
 		return &responseBody
 	}
-	// 2. 用加密过的密码查询是否重复
-	userWithPass := &core.User{
-		Password: password,
-	}
-	if users, _ := sqlite.QueryUsersWithStructORM(userWithPass); len(users) > 0 {
-		responseBody.Msg = "已存在密码为: " + string(pass) + " 的用户!"
-		return &responseBody
-	}
-	// 3. 创建普通用户
-	if err := sqlite.CreateUserORM("", username, password, string(pass)); err != nil {
+	base64Pass := base64.StdEncoding.EncodeToString([]byte(password)) // passwordShow
+	if err := sqlite.CreateUserORM("", username, base64Pass, password); err != nil {
 		responseBody.Msg = err.Error()
 	}
 	return &responseBody
@@ -89,47 +81,33 @@ func CreateUser(username string, password string) *ResponseBody {
 func UpdateUser(id string, username string, password string) *ResponseBody {
 
 	responseBody := ResponseBody{Msg: "success"}
-	
 	defer TimeCost(time.Now(), &responseBody)
 	if username == "admin" {
 		responseBody.Msg = "不能更改用户名为admin的用户!"
 		return &responseBody
 	}
-	// 使用id查询用户
+	
 	sqlite := core.NewSqlite(DefaultDbPath)
-	foundUser, err := sqlite.QueryUserORM(id)
-	if err != nil {
-		responseBody.Msg = err.Error()
+
+	foundUser, _ := sqlite.QueryUserORM(id);
+	if foundUser == nil {
+		responseBody.Msg = "不存在这个用户id, 无法修改!"
 		return &responseBody
 	}
-	// 1. 检查姓名是否重复
-	if foundUser.Username != username {
-		userWithName := &core.User{
-			Username: username,
-		}
-		if users, _ := sqlite.QueryUsersWithStructORM(userWithName); len(users) != 0 {
-			responseBody.Msg = "已存在用户名为: " + username + " 的用户!"
-			return &responseBody
-		}
-	}
-	// 2. 检查密码是否重复
-	if foundUser.Password != password {
-		userWithPass := &core.User{
-			Password: password,
-		}
-		if users, _ := sqlite.QueryUsersWithStructORM(userWithPass); len(users) != 0 {
-			responseBody.Msg = "已存在密码的用户!"
-			return &responseBody
-		}
-	}
-	// 3. 解码密码作为origPass
-	pass, err := base64.StdEncoding.DecodeString(password)
-	if err != nil {
-		responseBody.Msg = "Base64解码失败: " + err.Error()
+
+	if !sqlite.HasDuplicateUserORM(username, password) {
+		responseBody.Msg = "不存在这个用户名，无法修改!"
 		return &responseBody
 	}
-	// 4. 更新用户信息
-	if err := sqlite.UpdateUserORM(id, username, password, string(pass)); err != nil {
+	
+	encryPass := sha256.Sum224([]byte(password)) // %x => password
+	base64Pass := base64.StdEncoding.EncodeToString([]byte(password)) // passwordShow
+	data := core.User{
+		Username: username,
+		Password: fmt.Sprintf("%x", encryPass),
+		PasswordShow: base64Pass,
+	}
+	if err := sqlite.UpdateUserCondORM(id, &data); err != nil {
 		responseBody.Msg = err.Error()
 	}
 	return &responseBody

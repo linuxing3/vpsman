@@ -65,6 +65,10 @@ func (s *Sqlite)Connect() *gorm.DB {
 // CreateUserORM 使用给定信息创建成员
 func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, originPass string) error {
 
+	if s.HasDuplicateUserORM(username, originPass) {
+		return nil
+	}
+
 	// FIXED Use literal Struct and has address
 	db := s.Connect()
 
@@ -74,6 +78,36 @@ func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, or
 	}
 
 	return nil
+}
+
+// HasDuplicateUserORM 检查是否重复密码和用户名
+func (s *Sqlite) HasDuplicateUserORM(username, password string) bool{
+
+	fmt.Println("Checking duplicate username")
+	cond := User{
+		Username: username,
+	}
+	users, err := s.QueryUsersWithStructORM(&cond)
+	if err != nil {
+		return true
+	}
+	if len(users) > 0 {
+		return true
+	}
+
+	fmt.Println("Checking duplicate password")
+	encryPass := sha256.Sum224([]byte(password)) 
+	cond = User{
+		Password: fmt.Sprintf("%x", encryPass),
+	}
+	users, err = s.QueryUsersWithStructORM(&cond)
+	if err != nil {
+		return true
+	}
+	if len(users) > 0 {
+		return true
+	}
+	return false
 }
 
 // UpdateUserORM 使用给定信息更新用户名和密码

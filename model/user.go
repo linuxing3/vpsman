@@ -55,16 +55,17 @@ func AddUser(dbPath string) error {
 		fmt.Println(util.Yellow("不能新建用户名为'admin'的用户!"))
 		return nil
 	}
-	// 1. uuid，用于xray
+	inputPass := util.Input(fmt.Sprintf("生成随机密码: %s, 使用直接回车, 否则输入自定义密码: ", randomPass), randomPass) // originPass
 	uuid := fmt.Sprintf("%s", uuid.New())
 	fmt.Println(util.Yellow("[uuid]:" + uuid))
 
-	// 2. 生成随机密码，通过密码获取用户，存在报错
-	inputPass := util.Input(fmt.Sprintf("生成随机密码: %s, 使用直接回车, 否则输入自定义密码: ", randomPass), randomPass) // originPass
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(inputPass)) // passwordShow
-
-	// 创建Sqlite新用户
 	sqlite := core.NewSqlite(dbPath)
+	if sqlite.HasDuplicateUserORM(inputUser, inputPass) {
+		fmt.Println("已存在这个用户名或密码的用户!")
+		return nil
+	}
+	base64Pass := base64.StdEncoding.EncodeToString([]byte(inputPass)) // passwordShow
+	// 创建Sqlite新用户
 	if err := sqlite.CreateUserORM(uuid, inputUser, base64Pass, inputPass); err != nil {
 		return err
 	} 
