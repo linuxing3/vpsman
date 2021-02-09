@@ -87,18 +87,25 @@ func (s *Sqlite) UpdateUserORM(id string, username string, base64Pass string, or
 	if err := db.Model(&user).Updates(&User{Password: fmt.Sprintf("%x", encryPass), PasswordShow: base64Pass}).Error; err != nil {
 		return err
 	}
+	db.Save(&user)
 	return nil
+}
 
+// UpdateUserCondORM 使用给定信息更新用户名和密码
+func (s *Sqlite) UpdateUserCondORM(id string, data *User) error {
+	var user User
+	db := s.Connect()
+	db.First(&user, id)
+	db.Model(&user).Updates(data)
+	db.Save(&user)
+	return nil
 }
 
 // DeleteUserORM 使用给定信息删除用户
 func (s *Sqlite) DeleteUserORM(id string) error {
 	var user User
 	db := s.Connect()
-	fmt.Println("Deleteing record:")
-	fmt.Println(id)
-	idInt, _ := strconv.Atoi(id)
-	if err := db.Delete(&user, idInt).Error; err != nil {
+	if err := db.Delete(&user, id).Error; err != nil {
 		return err
 	}
 	return nil
@@ -108,8 +115,7 @@ func (s *Sqlite) DeleteUserORM(id string) error {
 func (s *Sqlite) QueryUserORM(id string) (*User, error) {
 	var user User
 	db := s.Connect()
-	idInt, _ := strconv.Atoi(id)
-	if err := db.Find(&user, idInt).Error; err != nil {
+	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -136,7 +142,7 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 		}
 	} else {
 		fmt.Println("Find all records:")
-		if err := db.Where("id > ?", 0).Find(&users).Error; err != nil {
+		if err := db.Find(&users).Error; err != nil {
 			return nil, err
 		}
 	}
@@ -165,8 +171,28 @@ func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, er
 	}, nil
 }
 
-// QueryUsersWhereORM 根据指定多个id获取用户记录
-func (s *Sqlite) QueryUsersWhereORM(cond interface{}) ([]*User, error) {
+// QueryUsersWithStructORM 根据Struct User获取用户记录
+// When querying with struct, GORM will only query with non-zero fields, 
+// that means if your field’s value is 0, '', false or other zero values, 
+// it won’t be used to build query conditions
+func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
+	var users []User
+	var userList []*User
+	db := s.Connect()
+	fmt.Println("Find all records:")
+	if err := db.Where(cond).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	// 更改为指针数组
+	for _, e := range users {
+		userList = append(userList, &e)
+	}
+	fmt.Println(users)
+	return userList, nil
+}
+
+// QueryUsersWithInterface 根据map[string]interface{}获取用户记录
+func (s *Sqlite) QueryUsersWithInterface(cond map[string]interface{}) ([]*User, error) {
 	var users []User
 	var userList []*User
 	db := s.Connect()

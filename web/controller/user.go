@@ -20,13 +20,11 @@ func UserList(findUser string) *ResponseBody {
 
 	// 按用户名查询UserList
 	sqlite := core.NewSqlite(DefaultDbPath)
-	cond := struct{
-		Username string
-	}{
+	userWithName := &core.User{
 		Username: findUser,
 	}
 	if findUser != "" {
-		if users, _ = sqlite.QueryUsersWhereORM(cond); len(users) > 0 {
+		if users, _ = sqlite.QueryUsersWithStructORM(userWithName); len(users) > 0 {
 			responseBody.Data = map[string]interface{}{
 				"userList": users,
 			}
@@ -73,12 +71,10 @@ func CreateUser(username string, password string) *ResponseBody {
 		return &responseBody
 	}
 	// 2. 用加密过的密码查询是否重复
-	cond := struct{
-		Password string
-	}{
+	userWithPass := &core.User{
 		Password: password,
 	}
-	if users, _ := sqlite.QueryUsersWhereORM(cond); len(users) > 0 {
+	if users, _ := sqlite.QueryUsersWithStructORM(userWithPass); len(users) > 0 {
 		responseBody.Msg = "已存在密码为: " + string(pass) + " 的用户!"
 		return &responseBody
 	}
@@ -108,24 +104,20 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 	}
 	// 1. 检查姓名是否重复
 	if foundUser.Username != username {
-		cond := struct{
-			UserName string
-		}{
-			UserName: username,
+		userWithName := &core.User{
+			Username: username,
 		}
-		if users, _ := sqlite.QueryUsersWhereORM(cond); len(users) != 0 {
+		if users, _ := sqlite.QueryUsersWithStructORM(userWithName); len(users) != 0 {
 			responseBody.Msg = "已存在用户名为: " + username + " 的用户!"
 			return &responseBody
 		}
 	}
 	// 2. 检查密码是否重复
 	if foundUser.Password != password {
-		cond := struct{
-			Password string
-		}{
+		userWithPass := &core.User{
 			Password: password,
 		}
-		if users, _ := sqlite.QueryUsersWhereORM(cond); len(users) != 0 {
+		if users, _ := sqlite.QueryUsersWithStructORM(userWithPass); len(users) != 0 {
 			responseBody.Msg = "已存在密码的用户!"
 			return &responseBody
 		}

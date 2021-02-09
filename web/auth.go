@@ -63,13 +63,11 @@ func init() {
 			if userID != "admin" {
 				// normal user password stored in sqlite
 				sqlite := core.NewSqlite(controller.DefaultDbPath)
-				cond := struct{
-					UserName string
-				}{
-					UserName: userID,
+				cond := &core.User{
+					Username: userID,
 				}
 				// query with condition
-				user, _ := sqlite.QueryUsersWhereORM(cond)
+				user, _ := sqlite.QueryUsersWithStructORM(cond)
 				if len(user) == 0 {
 					return nil, jwt.ErrFailedAuthentication
 				}
