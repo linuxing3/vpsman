@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"runtime"
 
@@ -14,11 +15,12 @@ type LoginInfo struct {
 	Password string `json: "password"`
 }
 
-var dbPath = "/var/lib/vpsman-manager"
-var jsonPath = "./vpsman-manager"
+var dbPath = "/var/lib/vpsman"
+var jsonPath = "./vpsman.json"
 
 // GetValue 获取leveldb值
 func GetValue(key string) (string, error) {
+	fmt.Println(key)
 	if runtime.GOOS == "windows" {
 		GetValueJSON(key)
 	}
@@ -38,6 +40,8 @@ func GetValue(key string) (string, error) {
 // SetValue 设置leveldb值
 // admin的密码是保存在leveldb中
 func SetValue(key string, value string) error {
+	fmt.Println(key)
+	fmt.Println(value)
 	// windows
 	if runtime.GOOS == "windows" {
 		SetValueJSON(key, value)

@@ -1,7 +1,7 @@
 package web
 
 import (
-	"encoding/base64"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -79,7 +79,7 @@ func init() {
 				}
 			}
 			// TODO 是否需要解密
-			if base64.StdEncoding.EncodeToString([]byte(pass)) == password {
+			if fmt.Sprintf("%x", sha256.Sum224([]byte(pass))) == password {
 				return &loginVals, nil
 			}
 			if err != nil {
