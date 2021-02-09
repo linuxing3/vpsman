@@ -80,27 +80,18 @@ func CreateUser(username string, password string) *ResponseBody {
 
 // UpdateUser 更新用户
 func UpdateUser(id string, username string, password string) *ResponseBody {
-	fmt.Printf("更新用户 %s, 新密码是 %s", username, password)
+	
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+	
 	if username == "admin" {
 		responseBody.Msg = "不能更改用户名为admin的用户!"
 		return &responseBody
 	}
 	
 	sqlite := core.NewSqlite(DefaultDbPath)
-
-	foundUser, _ := sqlite.QueryUserORM(id);
-	if foundUser == nil {
-		responseBody.Msg = "不存在这个用户id, 无法修改!"
-		return &responseBody
-	}
-
-	if !sqlite.HasDuplicateUserORM(username, password) {
-		responseBody.Msg = "不存在这个用户名，无法修改!"
-		return &responseBody
-	}
 	
+	fmt.Printf("更新用户 %s, 新密码是 %s", username, password)
 	encryPass := sha256.Sum224([]byte(password)) // %x => password
 	base64Pass := base64.StdEncoding.EncodeToString([]byte(password)) // passwordShow
 	data := core.User{
@@ -110,6 +101,7 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 	}
 	if err := sqlite.UpdateUserCondORM(id, &data); err != nil {
 		responseBody.Msg = err.Error()
+		return &responseBody
 	}
 	return &responseBody
 }
