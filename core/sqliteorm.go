@@ -64,47 +64,21 @@ func (s *Sqlite)Connect() *gorm.DB {
 
 // CreateUserORM 使用给定信息创建成员
 func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, originPass string) error {
-
-	if s.HasDuplicateUserORM(username, originPass) {
-		return nil
-	}
-
-	// FIXED Use literal Struct and has address
 	db := s.Connect()
-
 	encryPass := sha256.Sum224([]byte(originPass)) // %x => password
 	if err := db.Create(&User{Username: username, Password: fmt.Sprintf("%x", encryPass), PasswordShow: base64Pass}).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // HasDuplicateUserORM 检查是否重复密码和用户名
 func (s *Sqlite) HasDuplicateUserORM(username, password string) bool{
-
-	fmt.Println("Checking duplicate username")
-	cond := User{
-		Username: username,
-	}
-	users, err := s.QueryUsersWithStructORM(&cond)
-	if err != nil {
-		return true
-	}
-	if len(users) > 0 {
-		return true
-	}
-
-	fmt.Println("Checking duplicate password")
+	var users []User
 	encryPass := sha256.Sum224([]byte(password)) 
-	cond = User{
-		Password: fmt.Sprintf("%x", encryPass),
-	}
-	users, err = s.QueryUsersWithStructORM(&cond)
-	if err != nil {
-		return true
-	}
-	if len(users) > 0 {
+	db := s.Connect()
+	db.Where("username = ? or password = ?", username, fmt.Sprintf("%x", encryPass)).Find(&users)
+	if len(users) != 0 {
 		return true
 	}
 	return false
@@ -157,8 +131,6 @@ func (s *Sqlite) QueryUserORM(id string) (*User, error) {
 	if err := db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
-	fmt.Println(&user)
-	fmt.Println(user)
 	return &user, nil
 }
 
@@ -213,10 +185,16 @@ func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, er
 // When querying with struct, GORM will only query with non-zero fields, 
 // that means if your field’s value is 0, '', false or other zero values, 
 // it won’t be used to build query conditions
+// Struct
+// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
+// Slice of primary keys
+// db.Where([]int64{20, 21, 22}).Find(&users)
+// SELECT * FROM users WHERE id IN (20, 21, 22);
 func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
 	var users []*User
 	db := s.Connect()
-	fmt.Println("Find all records:")
+	fmt.Println("Find all records with condition:")
 	if err := db.Where(cond).Find(&users).Error; err != nil {
 		return nil, err
 	}
@@ -225,6 +203,9 @@ func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
 }
 
 // QueryUsersWithInterface 根据map[string]interface{}获取用户记录
+// Map
+// db.Where(map[string]interface{}{"name": "jinzhu", "age": 20}).Find(&users)
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 20;
 func (s *Sqlite) QueryUsersWithInterface(cond map[string]interface{}) ([]*User, error) {
 	var users []*User
 	db := s.Connect()

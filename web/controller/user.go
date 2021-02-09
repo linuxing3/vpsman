@@ -22,11 +22,11 @@ func UserList(findUser string) *ResponseBody {
 
 	// 按用户名查询UserList
 	sqlite := core.NewSqlite(DefaultDbPath)
-	userWithName := &core.User{
+	userWithName := core.User{
 		Username: findUser,
 	}
 	if findUser != "" {
-		if users, _ = sqlite.QueryUsersWithStructORM(userWithName); len(users) > 0 {
+		if users, _ = sqlite.QueryUsersWithStructORM(&userWithName); len(users) > 0 {
 			responseBody.Data = map[string]interface{}{
 				"userList": users,
 			}
@@ -57,6 +57,7 @@ func PageUserList(curPage int, pageSize int) *ResponseBody {
 
 // CreateUser 创建用户
 func CreateUser(username string, password string) *ResponseBody {
+	fmt.Printf("创建用户 %s, 密码是 %s", username, password)
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
 
@@ -79,7 +80,7 @@ func CreateUser(username string, password string) *ResponseBody {
 
 // UpdateUser 更新用户
 func UpdateUser(id string, username string, password string) *ResponseBody {
-
+	fmt.Printf("更新用户 %s, 新密码是 %s", username, password)
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
 	if username == "admin" {

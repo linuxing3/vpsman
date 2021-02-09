@@ -63,15 +63,14 @@ func init() {
 			if userID != "admin" {
 				// normal user password stored in sqlite
 				sqlite := core.NewSqlite(controller.DefaultDbPath)
-				cond := &core.User{
-					Username: userID,
-				}
+				db := sqlite.Connect()
 				// query with condition
-				user, _ := sqlite.QueryUsersWithStructORM(cond)
-				if len(user) == 0 {
+				var users []*core.User
+				db.Where(&core.User{Username: userID}).Find(&users)
+				if len(users) == 0 {
 					return nil, jwt.ErrFailedAuthentication
 				}
-				password = user[0].Password
+				password = users[0].Password
 			} else {
 				// admin password stored in leveldb or jsondb
 				if password, err = core.GetValue(userID + "_pass"); err != nil {
