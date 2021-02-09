@@ -30,6 +30,15 @@ type User struct {
 	ExpiryDate   string
 }
 
+// PageQueryUser 分页查询
+type PageQueryUser struct {
+	PageNum  int
+	CurPage  int
+	Total    int
+	PageSize int
+	DataList []*User
+}
+
 
 // NewSqlite constructor
 func NewSqlite (path string) *Sqlite {
@@ -136,6 +145,24 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 		userList = append(userList, &e)
 	}
 	return userList, nil
+}
+
+// PageQueryUsersORM 分页查询用户信息
+func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, error) {
+	var total int
+	var users []*User
+	offset := (curPage - 1) * pageSize
+	db := s.Connect()
+	if err := db.Offset(offset).Limit(pageSize).Find(&users).Error; err !=nil {
+		return nil, err
+	}
+	return &PageQueryUser{
+		CurPage:  curPage,
+		PageSize: pageSize,
+		Total:    total,
+		DataList: users,
+		PageNum:  (total + pageSize - 1) / pageSize,
+	}, nil
 }
 
 // QueryUsersWhereORM 根据指定多个id获取用户记录

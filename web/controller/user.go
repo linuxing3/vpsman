@@ -10,11 +10,29 @@ import (
 // DefaultDbPath 数据库地址
 var DefaultDbPath = "./vpsman.db"
 
-// UserList 获取用户列表
+// UserList 查询用户
 func UserList(findUser string) *ResponseBody {
+
+	var users []*core.User
+
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
-	responseBody.Data = map[string]interface{}{
+
+	// 按用户名查询UserList
+	sqlite := core.NewSqlite(DefaultDbPath)
+	cond := struct{
+		Username string
+	}{
+		Username: findUser,
+	}
+	if findUser != "" {
+		if users, _ = sqlite.QueryUsersWhereORM(cond); len(users) > 0 {
+			responseBody.Data = map[string]interface{}{
+				"userList": users,
+			}
+		}
+	} else {
+		responseBody.Msg = "必须提供名称"
 	}
 	return &responseBody
 }
@@ -23,26 +41,50 @@ func UserList(findUser string) *ResponseBody {
 func PageUserList(curPage int, pageSize int) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+	// connect db
+	sqlite := core.NewSqlite(DefaultDbPath)
+	// get pageData with curPage and pageSize
+	pageData, err := sqlite.PageQueryUsersORM(curPage, pageSize)
+	if err != nil {
+		responseBody.Msg = err.Error()
+		return &responseBody
+	}
 	responseBody.Data = map[string]interface{}{
-		"domain":   "",
+		"pageData": pageData,
 	}
 	return &responseBody
 }
 
 // CreateUser 创建用户
 func CreateUser(username string, password string) *ResponseBody {
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(password))
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+
 	if username == "admin" {
 		responseBody.Msg = "不能创建用户名为admin的用户!"
 		return &responseBody
 	}
-	// create User
+	// 创建普通用户
 	sqlite := core.NewSqlite(DefaultDbPath)
-	err := sqlite.CreateUserORM("", username, base64Pass, password)
+	// 1.解码密码作为origPass
+	pass, err := base64.StdEncoding.DecodeString(password)
 	if err != nil {
-		responseBody.Msg = "Failed to create"
+		responseBody.Msg = "Base64解码失败: " + err.Error()
+		return &responseBody
+	}
+	// 2. 用加密过的密码查询是否重复
+	cond := struct{
+		Password string
+	}{
+		Password: password,
+	}
+	if users, _ := sqlite.QueryUsersWhereORM(cond); len(users) > 0 {
+		responseBody.Msg = "已存在密码为: " + string(pass) + " 的用户!"
+		return &responseBody
+	}
+	// 3. 创建普通用户
+	if err := sqlite.CreateUserORM("", username, password, string(pass)); err != nil {
+		responseBody.Msg = err.Error()
 	}
 	return &responseBody
 }
@@ -51,13 +93,6 @@ func CreateUser(username string, password string) *ResponseBody {
 func UpdateUser(id string, username string, password string) *ResponseBody {
 
 	responseBody := ResponseBody{Msg: "success"}
-
-	// 解码密码
-	base64Pass, err := base64.StdEncoding.DecodeString(password)
-	if err != nil {
-		responseBody.Msg = "Base64解码失败: " + err.Error()
-		return &responseBody
-	}
 	
 	defer TimeCost(time.Now(), &responseBody)
 	if username == "admin" {
@@ -71,7 +106,7 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 		responseBody.Msg = err.Error()
 		return &responseBody
 	}
-	// 检查姓名是否重复
+	// 1. 检查姓名是否重复
 	if foundUser.Username != username {
 		cond := struct{
 			UserName string
@@ -83,7 +118,7 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 			return &responseBody
 		}
 	}
-	// 检查密码是否重复
+	// 2. 检查密码是否重复
 	if foundUser.Password != password {
 		cond := struct{
 			Password string
@@ -91,12 +126,18 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 			Password: password,
 		}
 		if users, _ := sqlite.QueryUsersWhereORM(cond); len(users) != 0 {
-			responseBody.Msg = "已存在密码为: " + password + " 的用户!"
+			responseBody.Msg = "已存在密码的用户!"
 			return &responseBody
 		}
 	}
-	// 更新用户信息
-	if err := sqlite.UpdateUserORM(id, username, password, string(base64Pass)); err != nil {
+	// 3. 解码密码作为origPass
+	pass, err := base64.StdEncoding.DecodeString(password)
+	if err != nil {
+		responseBody.Msg = "Base64解码失败: " + err.Error()
+		return &responseBody
+	}
+	// 4. 更新用户信息
+	if err := sqlite.UpdateUserORM(id, username, password, string(pass)); err != nil {
 		responseBody.Msg = err.Error()
 	}
 	return &responseBody
@@ -106,6 +147,7 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 func DelUser(id string) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+	// 删除用户
 	sqlite := core.NewSqlite(DefaultDbPath)
 	err := sqlite.DeleteUserORM(id)
 	if err != nil {
