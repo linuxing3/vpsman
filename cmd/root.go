@@ -30,7 +30,7 @@ exit:
 		fmt.Println()
 		fmt.Println(util.Cyan("欢迎使用xray管理程序"))
 		fmt.Println()
-		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理", "web管理"}
+		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理", "web管理", "安装管理"}
 		switch util.LoopInput("请选择: ", menuList, false) {
 		case 1:
 			userMenu()
@@ -42,6 +42,8 @@ exit:
 			trojanMenu()
 		case 5:
 			webMenu()
+		case 6:
+			installMenu()
 		default:
 			break exit
 		}
@@ -77,6 +79,7 @@ func initConfig() {
 		viper.SetConfigName(".vpsman") 
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(home)
+		viper.AddConfigPath(".")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

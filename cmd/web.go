@@ -17,8 +17,7 @@ var webCmd = &cobra.Command{
 	Short: "Start Gin Web Server",
 	Long: `A Web Server which offer UI for vpsman
 and usage of using command. For example:
-
-vpsman web -p 8080 --host 0.0.0.0 --ssl false
+vpsman web
 to quickly create a Web Gin application.`, 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Starting web")

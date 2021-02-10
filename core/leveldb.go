@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"runtime"
 
+	"github.com/linuxing3/vpsman/util"
 	"github.com/spf13/viper"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -16,16 +17,14 @@ type LoginInfo struct {
 	Password string `json: "password"`
 }
 
-var dbPath = viper.GetString("main.db.leveldb.path")
-var jsonPath = viper.GetString("main.db.jsondb.path")
-
 // GetValue 获取leveldb值
 func GetValue(key string) (string, error) {
 	fmt.Println(key)
 	if runtime.GOOS == "windows" {
-		GetValueJSON(key)
+		return GetValueJSON(key)
 	}
 	// linux or macos
+	var dbPath string = viper.GetString("main.db.leveldb.path")
 	db, err := leveldb.OpenFile(dbPath, nil)
 	defer db.Close()
 	if err != nil {
@@ -45,9 +44,10 @@ func SetValue(key string, value string) error {
 	fmt.Println(value)
 	// windows
 	if runtime.GOOS == "windows" {
-		SetValueJSON(key, value)
+		return SetValueJSON(key, value)
 	}
 	// linux and macos
+	var dbPath string = viper.GetString("main.db.leveldb.path")
 	db, err := leveldb.OpenFile(dbPath, nil)
 	defer db.Close()
 	if err != nil {
@@ -59,11 +59,10 @@ func SetValue(key string, value string) error {
 // DelValue 删除值
 func DelValue(key string) error {
 	if runtime.GOOS == "windows" {
-		if err := SetValueJSON("", ""); err != nil {
-			return err
-		}
-		return nil
+		return SetValueJSON("", "")
+
 	}
+	var dbPath string = viper.GetString("main.db.leveldb.path")
 	db, err := leveldb.OpenFile(dbPath, nil)
 	defer db.Close()
 	if err != nil {
@@ -74,24 +73,28 @@ func DelValue(key string) error {
 
 // GetValueJSON 从json文件读取
 func GetValueJSON (key string) (string, error){
+	var jsonPath string = viper.GetString("main.db.jsondb.path")
+	util.EnsureFileExists(jsonPath)
 	// windows
-		loginInfo := LoginInfo{}
-		data, err := ioutil.ReadFile(jsonPath)
-		if err != nil {
-			return "", err
-		}
-		if err := json.Unmarshal(data, &loginInfo); err != nil {
-			return "", err
-		}
-		if loginInfo.Username == key {
-			return loginInfo.Password, nil
-		}
-		return "", nil
+	loginInfo := LoginInfo{}
+	data, err := ioutil.ReadFile(jsonPath)
+	if err != nil {
+		return "", err
+	}
+	if err := json.Unmarshal(data, &loginInfo); err != nil {
+		return "", err
+	}
+	if loginInfo.Username == key {
+		return loginInfo.Password, nil
+	}
+	return "", nil
 	
 }
 
 // SetValueJSON 设置json文件
 func SetValueJSON(key string, value string) error {
+	var jsonPath string = viper.GetString("main.db.jsondb.path")
+	util.EnsureFileExists(jsonPath)
 	loginInfo := LoginInfo{
 		Username: key,
 		Password: value,
@@ -105,3 +108,4 @@ func SetValueJSON(key string, value string) error {
 	}
 	return nil
 }
+

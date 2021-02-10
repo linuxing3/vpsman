@@ -81,9 +81,22 @@ func InstallXray() {
 		fmt.Println(err)
 	}
 	util.ExecCommand(data)
-	util.OpenPort(443)
+	// util.OpenPort(443)
 	util.ExecCommand("systemctl restart xray")
 	util.ExecCommand("systemctl enable xray")
+}
+
+// InstallTrojan 安装trojan
+func InstallTrojan() {
+	fmt.Println()
+	box := packr.New("trojan-install", "../asset")
+	data, err := box.FindString("trojan-install.sh")
+	if err != nil {
+		fmt.Println(err)
+	}
+	util.ExecCommand(data)
+	util.ExecCommand("systemctl restart trojan")
+	util.ExecCommand("systemctl enable trojan")
 }
 
 // InstallTls 安装证书
