@@ -42,7 +42,7 @@ func ExecCommand(command string) error {
 	var cmd *exec.Cmd
 	
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/", command)
+		cmd = exec.Command("cmd.exe", "/", command)
 		} else {
 		cmd = exec.Command("bash", "-c", command)
 	}

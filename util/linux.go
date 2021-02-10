@@ -70,10 +70,11 @@ func CheckIP(ip string) bool {
 func InstallPack(name string) {
 
 	if runtime.GOOS == "windows" {
-		if CheckCommandExists("choco") {
-			ExecCommand("choco install -y " + name)
+		if CheckCommandExists("choco.exe") {
+			ExecCommand("choco.exe install -y " + name)
+		} else {
+			fmt.Println("请安装choco等包管理器！")
 		}
-		fmt.Println("请安装choco等包管理器！")
 	} else {
 		if !CheckCommandExists(name) {
 			if CheckCommandExists("yum") {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"runtime"
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/linuxing3/vpsman/core"
@@ -71,7 +72,11 @@ func InstallDocker() {
 
 // InstallSqliteBin 安装sqlite3的可执行文件
 func InstallSqliteBin() {
-	util.ExecCommand("apt install -y sqlite3")
+	if runtime.GOOS == "windows" {
+		util.InstallPack("sqlite")
+		} else {
+		util.InstallPack("sqlite3")
+	}
 }
 
 // InstallXray 安装xray
