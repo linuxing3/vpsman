@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"runtime"
 	"time"
 )
 
@@ -67,6 +68,11 @@ func CheckIP(ip string) bool {
 
 // InstallPack 安装指定名字软件
 func InstallPack(name string) {
+	
+	if runtime.GOOS == "windows" {
+		fmt.Println("Windows系统不支持Bash命令")
+		return
+	}
 	if !CheckCommandExists(name) {
 		if CheckCommandExists("yum") {
 			ExecCommand("yum install -y " + name)
@@ -79,6 +85,10 @@ func InstallPack(name string) {
 
 // OpenPort 开通指定端口
 func OpenPort(port int) {
+	if runtime.GOOS == "windows" {
+		fmt.Println("Windows系统不支持Bash命令")
+		return
+	}
 	if CheckCommandExists("firewall-cmd") {
 		ExecCommand(fmt.Sprintf("firewall-cmd --zone=public --add-port=%d/tcp --add-port=%d/udp --permanent >/dev/null 2>&1", port, port))
 		ExecCommand("firewall-cmd --reload >/dev/null 2>&1")

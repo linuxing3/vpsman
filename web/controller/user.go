@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"time"
 
 	"github.com/linuxing3/vpsman/core"
+	"github.com/linuxing3/vpsman/util"
 )
 
 // DefaultDbPath 数据库地址
@@ -71,8 +70,7 @@ func CreateUser(username string, password string) *ResponseBody {
 		responseBody.Msg = "已存在这个用户名或密码的用户!"
 		return &responseBody
 	}
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(password)) // passwordShow
-	if err := sqlite.CreateUserORM("", username, base64Pass, password); err != nil {
+	if err := sqlite.CreateUserORM("", username, password); err != nil {
 		responseBody.Msg = err.Error()
 	}
 	return &responseBody
@@ -90,16 +88,23 @@ func UpdateUser(id string, username string, password string) *ResponseBody {
 	}
 	
 	sqlite := core.NewSqlite(DefaultDbPath)
-	
+	// 准备数据
 	fmt.Printf("更新用户 %s, 新密码是 %s", username, password)
-	encryPass := sha256.Sum224([]byte(password)) // %x => password
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(password)) // passwordShow
+	encryPass, base64Pass := util.GenPass(password)
 	data := core.User{
-		Username: username,
 		Password: fmt.Sprintf("%x", encryPass),
 		PasswordShow: base64Pass,
 	}
-	if err := sqlite.UpdateUserCondORM(id, &data); err != nil {
+	// 有id就用id更改
+	if id == "" {
+		if err := sqlite.UpdateUserCondORM(&core.User{Username: username}, &data); err != nil {
+			responseBody.Msg = err.Error()
+			return &responseBody
+		}
+		return &responseBody
+	}
+	// 没有id用姓名修改，不可改名
+	if err := sqlite.UpdateUserByIdORM(id, &data); err != nil {
 		responseBody.Msg = err.Error()
 		return &responseBody
 	}
@@ -123,6 +128,15 @@ func DelUser(id string) *ResponseBody {
 func SetExpire(id string, useDays uint) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+
+	sqlite := core.NewSqlite(DefaultDbPath)
+	data := core.User{
+		ExpiryDate: "",
+	}
+	if err := sqlite.UpdateUserByIdORM(id, &data); err != nil {
+		responseBody.Msg = err.Error()
+		return &responseBody
+	}
 	return &responseBody
 }
 
@@ -130,5 +144,14 @@ func SetExpire(id string, useDays uint) *ResponseBody {
 func CancelExpire(id string) *ResponseBody {
 	responseBody := ResponseBody{Msg: "success"}
 	defer TimeCost(time.Now(), &responseBody)
+		
+	sqlite := core.NewSqlite(DefaultDbPath)
+	data := core.User{
+		ExpiryDate: "1000000",
+	}
+	if err := sqlite.UpdateUserByIdORM(id, &data); err != nil {
+		responseBody.Msg = err.Error()
+		return &responseBody
+	}
 	return &responseBody
 }

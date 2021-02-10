@@ -1,11 +1,8 @@
 package model
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/linuxing3/vpsman/core"
 	"github.com/linuxing3/vpsman/util"
 )
@@ -56,17 +53,15 @@ func AddUser(dbPath string) error {
 		return nil
 	}
 	inputPass := util.Input(fmt.Sprintf("生成随机密码: %s, 使用直接回车, 否则输入自定义密码: ", randomPass), randomPass) // originPass
-	uuid := fmt.Sprintf("%s", uuid.New())
-	fmt.Println(util.Yellow("[uuid]:" + uuid))
 
 	sqlite := core.NewSqlite(dbPath)
 	if sqlite.HasDuplicateUserORM(inputUser, inputPass) {
 		fmt.Println("已存在这个用户名或密码的用户!")
 		return nil
 	}
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(inputPass)) // passwordShow
+
 	// 创建Sqlite新用户
-	if err := sqlite.CreateUserORM(uuid, inputUser, base64Pass, inputPass); err != nil {
+	if err := sqlite.CreateUserORM("", inputUser, inputPass); err != nil {
 		return err
 	} 
 	return nil
@@ -100,15 +95,14 @@ func UpdateUser(dbPath string) error {
 	// Updating user information
 	inputName := util.Input("请输入新名称:", "daniel")
 	inputPass := util.Input("请输入密码", "000000")
-	encryPass := sha256.Sum224([]byte(inputPass)) // %x => password
-	base64Pass := base64.StdEncoding.EncodeToString([]byte(inputPass)) // passwordShow
 
+	encryptPass, base64Pass := util.GenPass(inputPass)
 	data := core.User{
 		Username: inputName,
-		Password: fmt.Sprintf("%x", encryPass),
+		Password: fmt.Sprintf("%x", encryptPass),
 		PasswordShow: base64Pass,
 	}
-	if err := sqlite.UpdateUserCondORM(fmt.Sprint(userList[choice-1].ID),&data); err != nil {
+	if err := sqlite.UpdateUserByIdORM(fmt.Sprint(userList[choice-1].ID),&data); err != nil {
 		return err
 	}
 	return nil

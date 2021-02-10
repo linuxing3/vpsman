@@ -1,10 +1,11 @@
 package core
 
 import (
-	"crypto/sha256"
+	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/linuxing3/vpsman/util"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -39,6 +40,34 @@ type PageQueryUser struct {
 	DataList []*User
 }
 
+// BeforeCreate 创建前hook
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	// tx.Statement.SetColumn("Password", fmt.Sprintf("%x", encryPass))
+	// tx.Statement.SetColumn("PasswordShow", base64Pass)
+  return
+}
+
+// BeforeUpdate 更新前hook
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
+  if tx.Statement.Changed("ID") {
+    return errors.New("id not allowed to change")
+  }
+  if tx.Statement.Changed("username", "admin") { // if Name or Role changed
+    return errors.New("admin not allowed to change")
+  }
+  if tx.Statement.Changed() {
+    return errors.New("user Changed")
+  }
+  return nil
+}
+
+// BeforeSave 保存前hook
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+
+	// tx.Statement.SetColumn("Password", fmt.Sprintf("%x", encryPass))
+	// tx.Statement.SetColumn("PasswordShow", base64Pass)
+	return nil
+}
 
 // NewSqlite constructor
 func NewSqlite (path string) *Sqlite {
@@ -63,10 +92,10 @@ func (s *Sqlite)Connect() *gorm.DB {
 }
 
 // CreateUserORM 使用给定信息创建成员
-func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, originPass string) error {
+func (s *Sqlite) CreateUserORM(id string, username string, password string) error {
 	db := s.Connect()
-	encryPass := sha256.Sum224([]byte(originPass)) // %x => password
-	if err := db.Create(&User{Username: username, Password: fmt.Sprintf("%x", encryPass), PasswordShow: base64Pass}).Error; err != nil {
+	encryptPass, base64Pass := util.GenPass(password)
+	if err := db.Create(&User{Username: username, Password: encryptPass, PasswordShow: base64Pass}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -75,9 +104,9 @@ func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, or
 // HasDuplicateUserORM 检查是否重复密码和用户名
 func (s *Sqlite) HasDuplicateUserORM(username, password string) bool{
 	var users []User
-	encryPass := sha256.Sum224([]byte(password)) 
+	encryptPass, _ := util.GenPass(password)
 	db := s.Connect()
-	db.Where("username = ? or password = ?", username, fmt.Sprintf("%x", encryPass)).Find(&users)
+	db.Where("username = ? or password = ?", username, encryptPass).Find(&users)
 	if len(users) != 0 {
 		return true
 	}
@@ -85,28 +114,38 @@ func (s *Sqlite) HasDuplicateUserORM(username, password string) bool{
 }
 
 // UpdateUserORM 使用给定信息更新用户名和密码
-func (s *Sqlite) UpdateUserORM(id string, username string, base64Pass string, originPass string) error {
+func (s *Sqlite) UpdateUserORM(id string, username string, password string) error {
 	var user User
 	db := s.Connect()
 
-	encryPass := sha256.Sum224([]byte(originPass))
+	encryptPass, base64Pass := util.GenPass(password)
 	if err := db.Where(&User{Username: username}).First(&user).Error; err != nil {
 		return err
 	}
-	if err := db.Model(&user).Updates(&User{Password: fmt.Sprintf("%x", encryPass), PasswordShow: base64Pass}).Error; err != nil {
+	if err := db.Model(&user).Updates(&User{Password: encryptPass, PasswordShow: base64Pass}).Error; err != nil {
 		return err
 	}
 	db.Save(&user)
 	return nil
 }
 
-// UpdateUserCondORM 使用给定信息更新用户名和密码
-func (s *Sqlite) UpdateUserCondORM(id string, data *User) error {
+// UpdateUserByIdORM 使用给定信息更新用户名和密码
+func (s *Sqlite) UpdateUserByIdORM(id string, data *User) error {
 	// FIXED Do not use pointer, because User Struct Not initialized
 	var user User
 	db := s.Connect()
 	db.First(&user, id)
 	db.Model(&user).Updates(data)
+	db.Save(&user)
+	return nil
+}
+
+// UpdateUserCondORM 使用给定信息更新用户名和密码
+func (s *Sqlite) UpdateUserCondORM(cond *User, data *User) error {
+	// FIXED Do not use pointer, because User Struct Not initialized
+	var user User
+	db := s.Connect()
+	db.Model(&user).Where(cond).Updates(data)
 	db.Save(&user)
 	return nil
 }
@@ -185,10 +224,10 @@ func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, er
 // When querying with struct, GORM will only query with non-zero fields, 
 // that means if your field’s value is 0, '', false or other zero values, 
 // it won’t be used to build query conditions
-// Struct
+// [Struct]
 // db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
 // SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
-// Slice of primary keys
+// [Slice of primary keys]
 // db.Where([]int64{20, 21, 22}).Find(&users)
 // SELECT * FROM users WHERE id IN (20, 21, 22);
 func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
@@ -203,7 +242,7 @@ func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
 }
 
 // QueryUsersWithInterface 根据map[string]interface{}获取用户记录
-// Map
+// [Map]
 // db.Where(map[string]interface{}{"name": "jinzhu", "age": 20}).Find(&users)
 // SELECT * FROM users WHERE name = "jinzhu" AND age = 20;
 func (s *Sqlite) QueryUsersWithInterface(cond map[string]interface{}) ([]*User, error) {

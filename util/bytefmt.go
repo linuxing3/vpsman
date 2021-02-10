@@ -1,6 +1,9 @@
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -63,4 +66,15 @@ func Bytefmt(bytes uint64) string {
 	result := strconv.FormatFloat(value, 'f', 2, 64)
 	result = strings.TrimSuffix(result, ".0")
 	return result + unit
+}
+
+// GenPass 自动生成加密密码和显示密码
+// sha256.Sum224 => heximal => encryptPass
+// base64.StdEncoding.EncodeToString => base64Pass
+func GenPass(password string) (string, string){
+
+	encryptPass := fmt.Sprintf("%x", sha256.Sum224([]byte(password)))
+	base64Pass := base64.StdEncoding.EncodeToString([]byte(password))
+	return encryptPass, base64Pass
+
 }
