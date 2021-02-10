@@ -1,23 +1,11 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
+	"crypto/sha256"
 	"fmt"
 
+	"github.com/linuxing3/vpsman/core"
+	"github.com/linuxing3/vpsman/util"
 	"github.com/linuxing3/vpsman/web"
 	"github.com/spf13/cobra"
 )
@@ -39,15 +27,42 @@ vpsman web -p 8080 --host 0.0.0.0 --ssl false
 to quickly create a Web Gin application.`, 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Starting web")
-		webMenu(host, port, ssl)
+		startWebServer(host, port, ssl)
 	},
 }
 
 // WebMenu get webmenu
-func webMenu(host string, port int, ssl bool) {
+func startWebServer(host string, port int, ssl bool) {
 	web.Start(host, port, ssl)
 }
 
+// WebMenu web管理菜单
+func webMenu() {
+	fmt.Println()
+	menu := []string{"重置web管理员密码", "启动web服务器"}
+	switch util.LoopInput("请选择: ", menu, true) {
+	case 1:
+		ResetAdminPass()
+	case 2:
+		web.Start("0.0.0.0", 8888, false)
+	}
+}
+
+// ResetAdminPass 重置管理员密码
+func ResetAdminPass() {
+	inputPass := util.Input("请输入admin用户密码: ", "")
+	if inputPass == "" {
+		fmt.Println("撤销更改!")
+	} else {
+		encryPass := sha256.Sum224([]byte(inputPass))
+		err := core.SetValue("admin_pass", fmt.Sprintf("%x", encryPass))
+		if err == nil {
+			fmt.Println(util.Green("重置admin密码成功!"))
+		} else {
+			fmt.Println(err)
+		}
+	}
+}
 
 func init() {
 

@@ -1,18 +1,3 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -31,15 +16,9 @@ var dbPath string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vpsman",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
+	Short: "Simple vps manager",
+	Long: `A simple vps manager that can control
+system services backend by sqlite.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mainMenu(dbPath)
 	},
@@ -51,7 +30,7 @@ exit:
 		fmt.Println()
 		fmt.Println(util.Cyan("欢迎使用xray管理程序"))
 		fmt.Println()
-		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理"}
+		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理", "web管理"}
 		switch util.LoopInput("请选择: ", menuList, false) {
 		case 1:
 			userMenu(dbPath)
@@ -61,15 +40,15 @@ exit:
 			nginxMenu()
 		case 4:
 			trojanMenu()
+		case 5:
+			webMenu()
 		default:
 			break exit
 		}
 	}
 }
 
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute 执行rootCmd
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -79,15 +58,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vpsman.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringVarP(&dbPath, "db", "", "./vpsman.db", "数据库目录地址")
 }
@@ -95,24 +67,20 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
-		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".vpsman" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".vpsman")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
