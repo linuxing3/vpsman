@@ -1,11 +1,11 @@
 package web
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"time"
 
 	"github.com/linuxing3/vpsman/core"
+	"github.com/linuxing3/vpsman/util"
 	"github.com/linuxing3/vpsman/web/controller"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -57,9 +57,6 @@ func init() {
 			// logic
 			userID := loginVals.Username
 			pass := loginVals.Password
-			if err != nil {
-				return nil, err
-			}
 			if userID != "admin" {
 				// normal user password stored in sqlite
 				sqlite := core.NewSqlite(controller.DefaultDbPath)
@@ -78,11 +75,8 @@ func init() {
 				}
 			}
 			// TODO 是否需要解密
-			if fmt.Sprintf("%x", sha256.Sum224([]byte(pass))) == password {
+			if encryptPass, _ := util.GenPass(pass); encryptPass == password {
 				return &loginVals, nil
-			}
-			if err != nil {
-				return nil, err
 			}
 			return nil, jwt.ErrFailedAuthentication
 		},
@@ -108,8 +102,8 @@ func init() {
 	}
 }
 
+// updateUser only for update admin information
 func updateUser(c *gin.Context) {
-	// only for update admin information
 	responseBody := controller.ResponseBody{Msg: "success"}
 	defer controller.TimeCost(time.Now(), &responseBody)
 
