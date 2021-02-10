@@ -7,22 +7,6 @@ import (
 	"github.com/linuxing3/vpsman/util"
 )
 
-// UserMenu 用户管理菜单
-func UserMenu(dbPath string) {
-	fmt.Println()
-	menu := []string{"查询用户", "添加用户","更新用户","删除用户"}
-	switch util.LoopInput("请选择: ", menu, false) {
-	case 1:
-		QueryAllUser(dbPath)
-	case 2:
-		AddUser(dbPath)
-	case 3:
-		UpdateUser(dbPath)
-	case 4:
-		DelUser(dbPath)
-	}
-}
-
 // QueryAllUser 删除用户
 func QueryAllUser(dbPath string) (*core.Sqlite, []*core.User ) {
 	
