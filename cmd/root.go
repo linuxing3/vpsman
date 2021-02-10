@@ -13,6 +13,9 @@ import (
 var cfgFile string
 var dbPath string
 
+// Any 别名
+type Any map[string]interface{}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vpsman",
@@ -20,11 +23,11 @@ var rootCmd = &cobra.Command{
 	Long: `A simple vps manager that can control
 system services backend by sqlite.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		mainMenu(dbPath)
+		mainMenu()
 	},
 }
 
-func mainMenu(dbPath string) {
+func mainMenu() {
 exit:
 	for {
 		fmt.Println()
@@ -59,11 +62,12 @@ func Execute() {
 }
 
 func init() {
+	// 加载配置文件
 	cobra.OnInitialize(initConfig)
+	// 通用选项
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vpsman.yaml)")
-
+	// 本地选项
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().StringVarP(&dbPath, "db", "", "./vpsman.sqlite", "数据库目录地址")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -87,4 +91,27 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+// CreateDefaultInitConfig 创建默认的配置文件
+func CreateDefaultInitConfig() {
+	path, _ := homedir.Expand(".vpsman.yaml")
+	util.EnsureFileExists(path)
+
+	initConfig()
+
+	defaultConf := Any{
+		"db": Any {
+			"sqlite": Any {
+				"path": "./vpsman.sqlite",
+			},
+			"leveldb": Any {
+				"path": "./vpsman.leveldb",
+			},
+			"jsondb": Any {
+				"path": "./vpsman.json",
+			},
+		},
+	}
+	viper.SetDefault("main", defaultConf)
 }

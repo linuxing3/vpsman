@@ -10,6 +10,9 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
+// Any 别名
+type Any map[string]interface{}
+
 const (
 	// RED 红色
 	RED = "\033[31m"

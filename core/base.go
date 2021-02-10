@@ -1,17 +1,18 @@
 package core
 
-// Config seting// Config seting
-type Config struct {
+// XrayConfig 结构体
+type XrayConfig struct {
 	Log       LogLevel         `json:"log"`
 	Inbounds  []InBoundConfig  `json:"inbounds"`
 	Outbounds []OutBoundConfig `json:"outbounds"`
 }
 
+// LogLevel 结构体
 type LogLevel struct {
 	LogLevel string `json: "loglevel"`
 }
 
-// InBoundConfig seting
+// InBoundConfig 结构体
 type InBoundConfig struct {
 	OutBoundConfig
 	Port           int                        `json:"port"`
@@ -19,19 +20,19 @@ type InBoundConfig struct {
 	StreamSettings InBoundStreamSettingConfig `json:"streamSettings"`
 }
 
-// OutBoundConfig seting
+// OutBoundConfig 结构体
 type OutBoundConfig struct {
 	Protocol string `json:"protocol"`
 }
 
-// InBoundSettingConfig setting
+// InBoundSettingConfig 结构体
 type InBoundSettingConfig struct {
 	Clients    []InBoundSettingClientConfig   `json:"clients"`
 	Decryption string                         `json:"decryption"`
 	Fallbacks  []InBoundSettingFallbackConfig `json:"fallbacks"`
 }
 
-// InBoundSettingClientConfig setting
+// InBoundSettingClientConfig 结构体
 type InBoundSettingClientConfig struct {
 	Id       string `json:"id"`
 	Flow     string `json:"flow"`
@@ -40,14 +41,14 @@ type InBoundSettingClientConfig struct {
 	Email    string `json:"email"`
 }
 
-// InBoundSettingFallbackConfig setting
+// InBoundSettingFallbackConfig 结构体
 type InBoundSettingFallbackConfig struct {
 	Path string `json:"path"`
 	Xver int    `json:"xver"`
 	Dest int    `json:"dest"`
 }
 
-// InBoundStreamSettingConfig seting
+// InBoundStreamSettingConfig 结构体
 type InBoundStreamSettingConfig struct {
 	Network      string            `json:"network"`
 	Security     string            `json:"security"`
@@ -56,13 +57,13 @@ type InBoundStreamSettingConfig struct {
 	WsSettings   WsSettingConfig   `json:"wsSettings"`
 }
 
-// XtlsSettingConfig seting
+// XtlsSettingConfig 结构体
 type XtlsSettingConfig struct {
 	Alpn         []string            `json:"alpn"`
 	Certificates []CertificateConfig `json:"certificates"`
 }
 
-// TcpSettingConfig seting
+// TcpSettingConfig 结构体
 type TcpSettingConfig struct {
 	AcceptProxyProtocol bool `json:"acceptProxyProtocol"`
 	Header              struct {
@@ -77,7 +78,7 @@ type WsSettingConfig struct {
 	Path string `json:"path"`
 }
 
-// CertificateConfig setting
+// CertificateConfig 结构体
 type CertificateConfig struct {
 	CertificateFile string `json:"certificateFile"`
 	KeyFile         string `json:"keyFile"`
@@ -94,7 +95,7 @@ type TrojanConfig struct {
 	LogLevel   int      `json:"log_level"`
 }
 
-// SSL seting
+// SSL 结构体
 type SSL struct {
 	Cert          string   `json:"cert"`
 	Cipher        string   `json:"cipher"`
@@ -106,7 +107,7 @@ type SSL struct {
 	Sni           string   `json:"sni"`
 }
 
-// TCP seting
+// TCP 结构体
 type TCP struct {
 	NoDelay      bool `json:"no_delay"`
 	KeepAlive    bool `json:"keep_alive"`

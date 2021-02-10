@@ -39,11 +39,13 @@ func RunWebShell(webShellPath string) {
 // ExecCommand 运行命令并实时查看运行结果
 func ExecCommand(command string) error {
 
+	var cmd *exec.Cmd
+	
 	if runtime.GOOS == "windows" {
-		fmt.Println("Windows系统不支持Bash命令")
-		return nil
+		cmd = exec.Command("cmd", "/", command)
+		} else {
+		cmd = exec.Command("bash", "-c", command)
 	}
-	cmd := exec.Command("bash", "-c", command)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
@@ -84,11 +86,15 @@ func ExecCommand(command string) error {
 // ExecCommandWithResult 运行命令并获取结果
 func ExecCommandWithResult(command string) string {
 	
+	var out []byte
+	var err error
+	
 	if runtime.GOOS == "windows" {
-		fmt.Println("Windows系统不支持Bash命令")
-		return ""
+		out, err = exec.Command("cmd", "/", command).CombinedOutput()
+		} else {
+		out, err = exec.Command("bash", "-c", command).CombinedOutput()
 	}
-	out, err := exec.Command("bash", "-c", command).CombinedOutput()
+
 	if err != nil && !strings.Contains(err.Error(), "exit status") {
 		fmt.Println("err: " + err.Error())
 		return ""

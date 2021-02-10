@@ -68,17 +68,22 @@ func CheckIP(ip string) bool {
 
 // InstallPack 安装指定名字软件
 func InstallPack(name string) {
-	
+
 	if runtime.GOOS == "windows" {
-		fmt.Println("Windows系统不支持Bash命令")
-		return
-	}
-	if !CheckCommandExists(name) {
-		if CheckCommandExists("yum") {
-			ExecCommand("yum install -y " + name)
-		} else if CheckCommandExists("apt-get") {
-			ExecCommand("apt-get update")
-			ExecCommand("apt-get install -y " + name)
+		if CheckCommandExists("choco") {
+			ExecCommand("choco install -y " + name)
+		}
+		fmt.Println("请安装choco等包管理器！")
+	} else {
+		if !CheckCommandExists(name) {
+			if CheckCommandExists("yum") {
+				ExecCommand("yum install -y " + name)
+			} else if CheckCommandExists("apt-get") {
+				ExecCommand("apt-get update")
+				ExecCommand("apt-get install -y " + name)
+			}
+		} else {
+			fmt.Println("没有找到合适包管理器！")
 		}
 	}
 }
@@ -86,6 +91,7 @@ func InstallPack(name string) {
 // OpenPort 开通指定端口
 func OpenPort(port int) {
 	if runtime.GOOS == "windows" {
+		ExecCommand(fmt.Sprintf("netsh advfirewall firewall add rule name='Vpsman Port' dir=in action=allow protocol=TCP localport=%d", port))
 		fmt.Println("Windows系统不支持Bash命令")
 		return
 	}

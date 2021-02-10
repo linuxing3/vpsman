@@ -71,6 +71,7 @@ func (u *User) BeforeSave(tx *gorm.DB) (err error) {
 }
 
 // NewSqlite constructor
+// 模拟面向对象编程的New函数
 func NewSqlite (path string) *Sqlite {
 	var defaultPath string = viper.GetString("main.db.sqlite.path")
 	if path == "" {
@@ -81,7 +82,7 @@ func NewSqlite (path string) *Sqlite {
 	}
 }
 
-// Connect Connect Sqlite for UserModel
+// Connect Sqlite的连接方法，默认从Path中读取数据库地址
 func (s *Sqlite)Connect() *gorm.DB {
 
 	db, err := gorm.Open(sqlite.Open(s.Path), &gorm.Config{})
@@ -142,8 +143,8 @@ func (s *Sqlite) UpdateUserByIdORM(id string, data *User) error {
 }
 
 // UpdateUserCondORM 使用给定信息更新用户名和密码
+// FIXED Do not use pointer, because User Struct Not initialized
 func (s *Sqlite) UpdateUserCondORM(cond *User, data *User) error {
-	// FIXED Do not use pointer, because User Struct Not initialized
 	var user User
 	db := s.Connect()
 	db.Model(&user).Where(cond).Updates(data)
@@ -179,9 +180,6 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 	// FIXED Use pointer
 	var users []*User
 	db := s.Connect()
-
-	fmt.Println("Got records:")
-	fmt.Println(len(ids))
 
 	if len(ids) > 0 {
 		fmt.Println("Find some records:")
@@ -222,9 +220,7 @@ func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, er
 }
 
 // QueryUsersWithStructORM 根据Struct User获取用户记录
-// When querying with struct, GORM will only query with non-zero fields, 
-// that means if your field’s value is 0, '', false or other zero values, 
-// it won’t be used to build query conditions
+// 用户结构体查询是，会忽略空值、零值和假值
 // [Struct]
 // db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
 // SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;

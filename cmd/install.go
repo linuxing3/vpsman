@@ -38,7 +38,7 @@ var installCmd = &cobra.Command{
 
 func installMenu() {
 	fmt.Println()
-	menu := []string{"更新xray", "证书申请", "安装mysql", "安装sqlite"}
+	menu := []string{"更新xray", "证书申请", "安装mysql", "安装sqlite", "默认配置文件"}
 	switch util.LoopInput("请选择: ", menu, true) {
 	case 1:
 		InstallXray()
@@ -48,6 +48,8 @@ func installMenu() {
 		InstallMysql(XrayDbDockerRun, "xray")
 	case 4:
 		InstallSqliteBin()
+	case 5:
+		CreateDefaultInitConfig()
 	default:
 		return
 	}

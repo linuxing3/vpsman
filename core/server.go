@@ -8,9 +8,7 @@ import (
 )
 
 // ServerConfig 服务器结构体定义
-type ServerConfig struct {
-	Config
-}
+type ServerConfig struct {}
 
 // Load 加载服务端配置文件
 func Load(path string) *ServerConfig {
