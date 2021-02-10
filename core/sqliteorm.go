@@ -64,15 +64,24 @@ func (s *Sqlite)Connect() *gorm.DB {
 
 // CreateUserORM 使用给定信息创建成员
 func (s *Sqlite) CreateUserORM(id string, username string, base64Pass string, originPass string) error {
-
 	db := s.Connect()
-
-	encryPass := sha256.Sum224([]byte(originPass))
+	encryPass := sha256.Sum224([]byte(originPass)) // %x => password
 	if err := db.Create(&User{Username: username, Password: fmt.Sprintf("%x", encryPass), PasswordShow: base64Pass}).Error; err != nil {
 		return err
 	}
-
 	return nil
+}
+
+// HasDuplicateUserORM 检查是否重复密码和用户名
+func (s *Sqlite) HasDuplicateUserORM(username, password string) bool{
+	var users []User
+	encryPass := sha256.Sum224([]byte(password)) 
+	db := s.Connect()
+	db.Where("username = ? or password = ?", username, fmt.Sprintf("%x", encryPass)).Find(&users)
+	if len(users) != 0 {
+		return true
+	}
+	return false
 }
 
 // UpdateUserORM 使用给定信息更新用户名和密码
@@ -93,6 +102,7 @@ func (s *Sqlite) UpdateUserORM(id string, username string, base64Pass string, or
 
 // UpdateUserCondORM 使用给定信息更新用户名和密码
 func (s *Sqlite) UpdateUserCondORM(id string, data *User) error {
+	// FIXED Do not use pointer, because User Struct Not initialized
 	var user User
 	db := s.Connect()
 	db.First(&user, id)
@@ -103,11 +113,14 @@ func (s *Sqlite) UpdateUserCondORM(id string, data *User) error {
 
 // DeleteUserORM 使用给定信息删除用户
 func (s *Sqlite) DeleteUserORM(id string) error {
+	// FIXED Do not use pointer, because User Struct Not initialized
 	var user User
 	db := s.Connect()
 	if err := db.Delete(&user, id).Error; err != nil {
 		return err
 	}
+	fmt.Println(&user)
+	fmt.Println(user)
 	return nil
 }
 
@@ -123,8 +136,8 @@ func (s *Sqlite) QueryUserORM(id string) (*User, error) {
 
 // QueryUsersORM 根据指定多个id获取用户记录
 func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
-	var users []User
-	var userList []*User
+	// FIXED Use pointer
+	var users []*User
 	db := s.Connect()
 
 	fmt.Println("Got records:")
@@ -146,11 +159,8 @@ func (s *Sqlite) QueryUsersORM(ids ...string) ([]*User, error) {
 			return nil, err
 		}
 	}
-	// 更改为指针数组
-	for _, e := range users {
-		userList = append(userList, &e)
-	}
-	return userList, nil
+	fmt.Println(users)
+	return users, nil
 }
 
 // PageQueryUsersORM 分页查询用户信息
@@ -175,35 +185,34 @@ func (s *Sqlite)PageQueryUsersORM(curPage int, pageSize int) (*PageQueryUser, er
 // When querying with struct, GORM will only query with non-zero fields, 
 // that means if your field’s value is 0, '', false or other zero values, 
 // it won’t be used to build query conditions
+// Struct
+// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
+// Slice of primary keys
+// db.Where([]int64{20, 21, 22}).Find(&users)
+// SELECT * FROM users WHERE id IN (20, 21, 22);
 func (s *Sqlite) QueryUsersWithStructORM(cond *User) ([]*User, error) {
-	var users []User
-	var userList []*User
+	var users []*User
 	db := s.Connect()
-	fmt.Println("Find all records:")
+	fmt.Println("Find all records with condition:")
 	if err := db.Where(cond).Find(&users).Error; err != nil {
 		return nil, err
 	}
-	// 更改为指针数组
-	for _, e := range users {
-		userList = append(userList, &e)
-	}
 	fmt.Println(users)
-	return userList, nil
+	return users, nil
 }
 
 // QueryUsersWithInterface 根据map[string]interface{}获取用户记录
+// Map
+// db.Where(map[string]interface{}{"name": "jinzhu", "age": 20}).Find(&users)
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 20;
 func (s *Sqlite) QueryUsersWithInterface(cond map[string]interface{}) ([]*User, error) {
-	var users []User
-	var userList []*User
+	var users []*User
 	db := s.Connect()
 	fmt.Println("Find all records:")
 	if err := db.Where(cond).Find(&users).Error; err != nil {
 		return nil, err
 	}
-	// 更改为指针数组
-	for _, e := range users {
-		userList = append(userList, &e)
-	}
 	fmt.Println(users)
-	return userList, nil
+	return users, nil
 }

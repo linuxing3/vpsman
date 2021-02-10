@@ -63,30 +63,26 @@ func init() {
 			if userID != "admin" {
 				// normal user password stored in sqlite
 				sqlite := core.NewSqlite(controller.DefaultDbPath)
-				cond := &core.User{
-					Username: userID,
-				}
+				db := sqlite.Connect()
 				// query with condition
-				user, _ := sqlite.QueryUsersWithStructORM(cond)
-				if len(user) == 0 {
-					fmt.Println("No User Found")
+				var users []*core.User
+				db.Where(&core.User{Username: userID}).Find(&users)
+				if len(users) == 0 {
 					return nil, jwt.ErrFailedAuthentication
 				}
-				fmt.Println("Found User:")
-				fmt.Println(user)
-				password = user[0].Password
-				encryPass := sha256.Sum224([]byte(pass))
-				if password == fmt.Sprintf("%x", encryPass) {
-					return &loginVals, nil
-				}
+				password = users[0].Password
 			} else {
-				// admin password stored in leveldb
+				// admin password stored in leveldb or jsondb
 				if password, err = core.GetValue(userID + "_pass"); err != nil {
 					return nil, err
 				}
-				if password == pass {
-					return &loginVals, nil
-				}
+			}
+			// TODO 是否需要解密
+			if fmt.Sprintf("%x", sha256.Sum224([]byte(pass))) == password {
+				return &loginVals, nil
+			}
+			if err != nil {
+				return nil, err
 			}
 			return nil, jwt.ErrFailedAuthentication
 		},
@@ -116,13 +112,16 @@ func updateUser(c *gin.Context) {
 	// only for update admin information
 	responseBody := controller.ResponseBody{Msg: "success"}
 	defer controller.TimeCost(time.Now(), &responseBody)
+
 	username := c.DefaultPostForm("username", "admin")
 	pass := c.PostForm("password")
-	// set value in leveldb for sessions
+
+	// TODO set value in leveldb/jsondb for sessions
 	err := core.SetValue(fmt.Sprintf("%s_pass", username), pass)
 	if err != nil {
 		responseBody.Msg = err.Error()
 	}
+
 	c.JSON(200, responseBody)
 }
 
