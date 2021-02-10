@@ -6,10 +6,11 @@ import (
 
 	"github.com/linuxing3/vpsman/core"
 	"github.com/linuxing3/vpsman/util"
+	"github.com/spf13/viper"
 )
 
 // DefaultDbPath 数据库地址
-var DefaultDbPath = "./vpsman.db"
+var DefaultDbPath = viper.GetString("main.db.sqlite.path")
 
 // UserList 查询用户
 func UserList(findUser string) *ResponseBody {

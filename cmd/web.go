@@ -8,12 +8,7 @@ import (
 	"github.com/linuxing3/vpsman/util"
 	"github.com/linuxing3/vpsman/web"
 	"github.com/spf13/cobra"
-)
-
-var (
-	host string
-	port int
-	ssl  bool
+	"github.com/spf13/viper"
 )
 
 // webCmd represents the web command
@@ -27,12 +22,15 @@ vpsman web -p 8080 --host 0.0.0.0 --ssl false
 to quickly create a Web Gin application.`, 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Starting web")
-		startWebServer(host, port, ssl)
+		startWebServer()
 	},
 }
 
 // WebMenu get webmenu
-func startWebServer(host string, port int, ssl bool) {
+func startWebServer() {
+	host := viper.GetString("main.host.default")
+	port := viper.GetInt("main.host.port")
+	ssl := viper.GetBool("main.host.ssl")
 	web.Start(host, port, ssl)
 }
 
@@ -44,7 +42,7 @@ func webMenu() {
 	case 1:
 		ResetAdminPass()
 	case 2:
-		web.Start("0.0.0.0", 8888, false)
+		startWebServer()
 	}
 }
 
@@ -65,10 +63,5 @@ func ResetAdminPass() {
 }
 
 func init() {
-
-	webCmd.Flags().StringVarP(&host, "host", "", "0.0.0.0", "web服务监听地址")
-	webCmd.Flags().IntVarP(&port, "port", "p", 8888, "web服务启动端口")
-	webCmd.Flags().BoolVarP(&ssl, "ssl", "", false, "web服务是否以https方式运行")
-
 	rootCmd.AddCommand(webCmd)
 }

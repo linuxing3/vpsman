@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"runtime"
 
+	"github.com/spf13/viper"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
@@ -15,8 +16,8 @@ type LoginInfo struct {
 	Password string `json: "password"`
 }
 
-var dbPath = "/var/lib/vpsman"
-var jsonPath = "./vpsman.json"
+var dbPath = viper.GetString("main.db.leveldb.path")
+var jsonPath = viper.GetString("main.db.jsondb.path")
 
 // GetValue 获取leveldb值
 func GetValue(key string) (string, error) {

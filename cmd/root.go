@@ -33,7 +33,7 @@ exit:
 		menuList := []string{"用户管理", "Xray管理", "Nginx管理", "Trojan管理", "web管理"}
 		switch util.LoopInput("请选择: ", menuList, false) {
 		case 1:
-			userMenu(dbPath)
+			userMenu()
 		case 2:
 			xrayMenu()
 		case 3:
@@ -61,7 +61,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vpsman.yaml)")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.Flags().StringVarP(&dbPath, "db", "", "./vpsman.db", "数据库目录地址")
+	rootCmd.Flags().StringVarP(&dbPath, "db", "", "./vpsman.sqlite", "数据库目录地址")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -74,9 +74,9 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
+		viper.SetConfigName(".vpsman") 
+		viper.SetConfigType("yaml")
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".vpsman")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

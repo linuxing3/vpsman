@@ -25,10 +25,10 @@ func nginxMenu() {
 exit:
    for {
     fmt.Println()
-    fmt.Print(util.Cyan("Please select command"))
+    fmt.Print(util.Cyan("请选择"))
     fmt.Println()
-    loopMenu := []string{"Start", "Status", "Stop"}
-    choice := util.LoopInput("Enter to Exit", loopMenu, false)
+    loopMenu := []string{"启动", "状态", "停止"}
+    choice := util.LoopInput("回车退出", loopMenu, false)
     switch choice {
         case 1:
             fmt.Println("nginx start")

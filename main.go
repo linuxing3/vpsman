@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/linuxing3/vpsman/cmd"
+import (
+	"github.com/linuxing3/vpsman/cmd"
+)
 
 func main() {
 	cmd.Execute()

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/linuxing3/vpsman/util"
+	"github.com/spf13/viper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -71,7 +72,7 @@ func (u *User) BeforeSave(tx *gorm.DB) (err error) {
 
 // NewSqlite constructor
 func NewSqlite (path string) *Sqlite {
-	var defaultPath string = "./vpsman.db"
+	var defaultPath string = viper.GetString("main.db.sqlite.path")
 	if path == "" {
 			path = defaultPath
 	}
