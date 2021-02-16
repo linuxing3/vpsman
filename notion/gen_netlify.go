@@ -30,16 +30,10 @@ var analyticsCode = "888"
 func addAllRedirects(store *Articles) {
 	netlifyAddStaticRedirects()
 	netlifyAddRewrite("/favicon.ico", "/static/favicon.ico")
-	//netlifyAddRewrite("/book/", "/static/documents.html")
-	//netflifyAddTempRedirect("/book/*", "/article/:splat")
 	netflifyAddTempRedirect("/software/sumatrapdf*", "https://www.sumatrapdfreader.org/:splat")
 
 	netflifyAddTempRedirect("/articles/", "/documents.html")
-	netflifyAddTempRedirect("/articles/index.html", "/documents.html")
-	netflifyAddTempRedirect("/static/documents.html", "/documents.html")
-	netflifyAddTempRedirect("/software/index.html", "/software/")
 
-	netlifyAddRewrite("/articles/go-cookbook.html", "/book/go-cookbook.html")
 	netlifyAddRewrite("/articles/go-cookbook.html", "/book/go-cookbook.html")
 
 	for _, article := range store.articles {
@@ -118,7 +112,7 @@ func netlifyWriteFile(fileName string, d []byte) {
 }
 
 func netlifyRequestGetFullHost() string {
-	return "https://blog.kowalczyk.info"
+	return "https://linuxing3.github.io"
 }
 
 // https://www.linkedin.com/shareArticle?mini=true&;url=https://nodesource.com/blog/why-the-new-v8-is-so-damn-fast"
@@ -318,7 +312,7 @@ func writeFileOrWriter(path string, data []byte, w io.Writer) error {
 
 func genSitemap(store *Articles, w io.Writer) error {
 	// /sitemap.xml
-	data, err := genSiteMap(store, "https://blog.kowalczyk.info")
+	data, err := genSiteMap(store, "https://linuxing3.github.io")
 	must(err)
 	return writeFileOrWriter("/sitemap.xml", data, w)
 }
