@@ -25,6 +25,8 @@ import (
 	atom "github.com/thomas11/atomgenerator"
 )
 
+var analyticsCode = "888"
+
 func addAllRedirects(store *Articles) {
 	netlifyAddStaticRedirects()
 	netlifyAddRewrite("/favicon.ico", "/static/favicon.ico")

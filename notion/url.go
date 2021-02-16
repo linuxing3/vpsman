@@ -1,4 +1,4 @@
-package util
+package notion
 
 import (
 	"path/filepath"
@@ -14,7 +14,7 @@ var (
 
 func logIfError(err error) {
 	if err != nil {
-		Logf("%s\n", err)
+		logf("%s\n", err)
 	}
 }
 
@@ -46,7 +46,7 @@ func charCanRepeat(c byte) bool {
 }
 
 // Urlify generates safe url from tile by removing hazardous characters
-func Urlify(title string) string {
+func urlify(title string) string {
 	s := strings.TrimSpace(title)
 	s = strings.ToLower(s)
 	var res []byte

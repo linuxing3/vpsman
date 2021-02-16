@@ -1,4 +1,4 @@
-package util
+package notion
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func logError(err error) {
 }
 */
 
-func Logf(format string, args ...interface{}) {
+func logf(format string, args ...interface{}) {
 	s := fmt.Sprintf(format, args...)
 	if logFile != nil {
 		fmt.Fprint(logFile, s)
@@ -42,11 +42,11 @@ func Logf(format string, args ...interface{}) {
 }
 
 // TODO: have just one
-func LogVerbose(format string, args ...interface{}) {
-	Verbose(format, args...)
+func logVerbose(format string, args ...interface{}) {
+	verbose(format, args...)
 }
 
-func Verbose(format string, args ...interface{}) {
+func verbose(format string, args ...interface{}) {
 	s := fmt.Sprintf(format, args...)
 	if logFile != nil {
 		fmt.Fprint(logFile, s)
@@ -57,9 +57,9 @@ var (
 	doTempLog = false
 )
 
-func LogTemp(format string, args ...interface{}) {
+func logTemp(format string, args ...interface{}) {
 	if !doTempLog {
 		return
 	}
-	Logf(format, args...)
+	logf(format, args...)
 }

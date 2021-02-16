@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/linuxing3/vpsman/util"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/caching_downloader"
 )
@@ -63,7 +62,7 @@ func guessExt(fileName string, contentType string) string {
 func downloadImage(c *notionapi.Client, uri string, blockID string) ([]byte, string, error) {
 	img, err := c.DownloadFile(uri, blockID)
 	if err != nil {
-		util.Logf("\n  failed with %s\n", err)
+		logf("\n  failed with %s\n", err)
 		return nil, "", err
 	}
 	ext := guessExt(uri, img.Header.Get("Content-Type"))
@@ -82,12 +81,12 @@ func downloadAndCacheImage(c *notionapi.Client, uri string, blockID string) (str
 
 	cachedPath := findImageInDir(imgDir, sha)
 	if cachedPath != "" {
-		util.Verbose("Image %s already downloaded as %s\n", uri, cachedPath)
+		verbose("Image %s already downloaded as %s\n", uri, cachedPath)
 		return cachedPath, nil
 	}
 
 	timeStart := time.Now()
-	util.Logf("Downloading %s ... ", uri)
+	logf("Downloading %s ... ", uri)
 
 	imgData, ext, err := downloadImage(c, uri, blockID)
 	must(err)
@@ -98,7 +97,7 @@ func downloadAndCacheImage(c *notionapi.Client, uri string, blockID string) (str
 	if err != nil {
 		return "", err
 	}
-	util.Logf("finished in %s. Wrote as '%s'\n", time.Since(timeStart), cachedPath)
+	logf("finished in %s. Wrote as '%s'\n", time.Since(timeStart), cachedPath)
 
 	return cachedPath, nil
 }
@@ -107,7 +106,7 @@ func downloadAndCacheImage(c *notionapi.Client, uri string, blockID string) (str
 func rmFile(path string) {
 	err := os.Remove(path)
 	if err != nil {
-		util.Logf("os.Remove(%s) failed with %s\n", path, err)
+		logf("os.Remove(%s) failed with %s\n", path, err)
 	}
 }
 
@@ -120,7 +119,7 @@ func rmCached(pageID string) {
 func loadPageAsArticle(d *caching_downloader.Downloader, pageID string) *Article {
 	page, err := d.DownloadPage(pageID)
 	must(err)
-	util.Logf("Downloaded %s %s\n", pageID, page.Root().Title)
+	logf("Downloaded %s %s\n", pageID, page.Root().Title)
 	c := &notionapi.Client{}
 	return notionPageToArticle(c, page)
 }

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/linuxing3/vpsman/util"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/u"
 )
@@ -94,7 +93,7 @@ func (a *Article) URL() string {
 	if a.urlOverride != "" {
 		return a.urlOverride
 	}
-	return "/article/" + a.ID + "/" + util.Urlify(a.Title) + ".html"
+	return "/article/" + a.ID + "/" + urlify(a.Title) + ".html"
 }
 
 // PathAsText returns navigation path as text
@@ -327,7 +326,7 @@ func (a *Article) maybeParseGallery(block *notionapi.Block, nBlock int, blocks [
 	}
 
 	if len(imageBlocks) < 2 {
-		util.Logf("Found #gallery followed by %d image blocks (should be at least 2). Page id: %s, #gallery block id: %s\n", len(imageBlocks), a.page.ID, block.ID)
+		logf("Found #gallery followed by %d image blocks (should be at least 2). Page id: %s, #gallery block id: %s\n", len(imageBlocks), a.page.ID, block.ID)
 		return false
 	}
 	var urls []string
@@ -369,31 +368,31 @@ func (a *Article) maybeParseMeta(nBlock int, block *notionapi.Block) bool {
 	var err error
 
 	if block.Type != notionapi.BlockText {
-		util.LogTemp("extractMetadata: ending look because block %d is of type %s\n", nBlock, block.Type)
+		logTemp("extractMetadata: ending look because block %d is of type %s\n", nBlock, block.Type)
 		return false
 	}
 
 	if len(block.InlineContent) == 0 {
-		util.LogTemp("block %d of type %s and has no InlineContent\n", nBlock, block.Type)
+		logTemp("block %d of type %s and has no InlineContent\n", nBlock, block.Type)
 		return true
 	} else {
-		util.LogTemp("block %d has %d InlineContent\n", nBlock, len(block.InlineContent))
+		logTemp("block %d has %d InlineContent\n", nBlock, len(block.InlineContent))
 	}
 
 	inline := block.InlineContent[0]
 	// must be plain text
 	if !inline.IsPlain() {
-		util.LogTemp("block: %d of type %s: inline has attributes\n", nBlock, block.Type)
+		logTemp("block: %d of type %s: inline has attributes\n", nBlock, block.Type)
 		return false
 	}
 
 	// remove empty lines at the top
 	s := strings.TrimSpace(inline.Text)
 	if s == "" {
-		util.LogTemp("block: %d of type %s: inline.Text is empty\n", nBlock, block.Type)
+		logTemp("block: %d of type %s: inline.Text is empty\n", nBlock, block.Type)
 		return true
 	}
-	util.LogTemp("  %d %s '%s'\n", nBlock, block.Type, s)
+	logTemp("  %d %s '%s'\n", nBlock, block.Type, s)
 
 	// parse generic metadata like "@foo: bar" or "@foo bar"
 	if s[0] == '@' {
@@ -418,7 +417,7 @@ func (a *Article) maybeParseMeta(nBlock int, block *notionapi.Block) bool {
 
 	parts := strings.SplitN(s, ":", 2)
 	if len(parts) != 2 {
-		util.LogTemp("block: %d of type %s: inline.Text is not key/value. s='%s'\n", nBlock, block.Type, s)
+		logTemp("block: %d of type %s: inline.Text is not key/value. s='%s'\n", nBlock, block.Type, s)
 		return false
 	}
 	key := strings.ToLower(strings.TrimSpace(parts[0]))
@@ -426,21 +425,21 @@ func (a *Article) maybeParseMeta(nBlock int, block *notionapi.Block) bool {
 	switch key {
 	case "tags":
 		a.Tags = parseTags(val)
-		util.LogTemp("Tags: %v\n", a.Tags)
+		logTemp("Tags: %v\n", a.Tags)
 	case "id":
 		a.SetID(val)
-		util.LogTemp("ID: %s\n", a.ID)
+		logTemp("ID: %s\n", a.ID)
 	case "publishedon":
 		// PublishedOn over-writes Date and CreatedAt
 		a.publishedOnOverwrite, err = parseDate(val)
 		must(err)
 		a.inBlog = true
-		util.LogTemp("got publishedon")
+		logTemp("got publishedon")
 	case "date", "createdat":
 		a.PublishedOn, err = parseDate(val)
 		must(err)
 		a.inBlog = true
-		util.LogTemp("got date or createdat")
+		logTemp("got date or createdat")
 	case "updatedat":
 		a.UpdatedOn, err = parseDate(val)
 		must(err)
@@ -448,7 +447,7 @@ func (a *Article) maybeParseMeta(nBlock int, block *notionapi.Block) bool {
 		a.setStatusMust(val)
 	case "description":
 		a.Description = val
-		util.LogTemp("Description: %s\n", a.Description)
+		logTemp("Description: %s\n", a.Description)
 	case "headerimage":
 		a.setHeaderImageMust(val)
 	case "collection":
@@ -477,7 +476,7 @@ func (a *Article) processBlock(blcok *notionapi.Block, nBlock int, blocks []*not
 func (a *Article) processBlocks(blocks []*notionapi.Block) {
 	parsingMeta := true
 	for nBlock, block := range blocks {
-		util.LogTemp("  %d %s '%s'\n", nBlock, block.Type, block.Title)
+		logTemp("  %d %s '%s'\n", nBlock, block.Type, block.Title)
 
 		if parsingMeta {
 			parsingMeta = a.maybeParseMeta(nBlock, block)
@@ -500,7 +499,7 @@ func (a *Article) processBlocks(blocks []*notionapi.Block) {
 			link := block.Source
 			path, err := downloadAndCacheImage(a.notionClient, link, block.ID)
 			if err != nil {
-				util.Logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(a.page.ID), err)
+				logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(a.page.ID), err)
 				must(err)
 			}
 			relURL := "/img/" + filepath.Base(path)
@@ -525,10 +524,10 @@ func findImageMapping(images []*ImageMapping, link string) *ImageMapping {
 			return im
 		}
 	}
-	util.Logf("Didn't find image with link '%s'\n", link)
-	util.Logf("Available images:\n")
+	logf("Didn't find image with link '%s'\n", link)
+	logf("Available images:\n")
 	for _, im := range images {
-		util.Logf("  link: %s, relativeURL: %s, path: %s\n", im.link, im.relativeURL, im.path)
+		logf("  link: %s, relativeURL: %s, path: %s\n", im.link, im.relativeURL, im.path)
 	}
 	return nil
 }
@@ -553,7 +552,7 @@ func notionPageToArticle(c *notionapi.Client, page *notionapi.Page) *Article {
 		defer func() {
 			doTempLog = false
 		}()
-		util.LogTemp("Temp logging article %s %s\n", id, title)
+		logTemp("Temp logging article %s %s\n", id, title)
 	}
 
 	a.PublishedOn = root.CreatedOn()

@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"sort"
 
-	"github.com/linuxing3/vpsman/util"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/caching_downloader"
 	"github.com/kjk/u"
@@ -77,7 +76,7 @@ func buildArticleNavigation(article *Article, isRootPage func(string) bool, idTo
 			continue
 		}
 		title := block.Title
-		uri := "/article/" + normalizeID(block.ID) + "/" + util.Urlify(title)
+		uri := "/article/" + normalizeID(block.ID) + "/" + urlify(title)
 		path := URLPath{
 			Name: title,
 			URL:  uri,
@@ -146,7 +145,7 @@ func loadArticles(d *caching_downloader.Downloader) *Articles {
 		u.PanicIf(id != notionapi.ToNoDashID(id), "bad id '%s' sneaked in", id)
 		article := notionPageToArticle(c, page)
 		if article.urlOverride != "" {
-			util.Verbose("url override: %s => %s\n", article.urlOverride, article.ID)
+			verbose("url override: %s => %s\n", article.urlOverride, article.ID)
 		}
 		res.idToArticle[id] = article
 		// this might be legacy, short id. If not, we just set the same value twice

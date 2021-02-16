@@ -5,16 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/linuxing3/vpsman/util"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/tohtml"
-	"github.com/kjk/u"
 )
 
-var (
-	must    = u.Must
-	panicIf = u.PanicIf
-)
 // Converter renders article as html
 type Converter struct {
 	article      *Article
@@ -51,10 +45,10 @@ func (c *Converter) getURLAndTitleForBlock(block *notionapi.Block) (string, stri
 	article := c.idToArticle(id)
 	if article == nil {
 		title := block.Title
-		util.Logf("No article for id %s %s\n", id, title)
+		logf("No article for id %s %s\n", id, title)
 		pageURL := "https://notion.so/" + notionapi.ToNoDashID(c.page.ID)
-		util.Logf("Link from page: %s\n", pageURL)
-		url := "/article/" + id + "/" + util.urlify(title)
+		logf("Link from page: %s\n", pageURL)
+		url := "/article/" + id + "/" + urlify(title)
 		return url, title
 	}
 
